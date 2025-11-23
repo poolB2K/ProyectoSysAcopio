@@ -12,7 +12,6 @@ import pe.com.acopio.model.*;
 import pe.com.acopio.repository.AcopioDetalleRepository;
 import pe.com.acopio.repository.AcopioRepository;
 
-import java.io.InputStream;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -30,6 +29,7 @@ public class AcopioService {
     private final AcopioRepository acopioRepository;
     private final AcopioDetalleRepository acopioDetalleRepository;
     private final HistorialService historialService;
+    private final JasperReportService jasperReportService;
 
     /**
      * Crear un nuevo acopio con sus detalles
@@ -59,8 +59,7 @@ public class AcopioService {
         historialService.logAccion(
                 acopioGuardado.getUsuario(), "REGISTRO_ACOPIO",
                 "Acopio " + numeroAcopio + " registrado por S/. " + acopio.getTotalPagar(),
-                "ACOPIO"
-        );
+                "ACOPIO");
 
         logger.info("Acopio creado exitosamente: {}", numeroAcopio);
         return acopioGuardado;
@@ -130,8 +129,7 @@ public class AcopioService {
         historialService.logAccion(
                 acopio.getUsuario(), "ANULACION_ACOPIO",
                 "Acopio " + acopio.getNumeroAcopio() + " anulado. Motivo: " + motivo,
-                "ACOPIO"
-        );
+                "ACOPIO");
     }
 
     /**
@@ -143,16 +141,6 @@ public class AcopioService {
         try {
             Acopio acopio = acopioRepository.findById(acopioId)
                     .orElseThrow(() -> new EntityNotFoundException("No se encontró el acopio con ID: " + acopioId));
-
-            // Cargar el archivo JRXML
-            InputStream reportStream = getClass().getResourceAsStream("/reports/comprobante_acopio.jrxml");
-            if (reportStream == null) {
-                throw new RuntimeException("No se encontró el archivo de reporte: /reports/comprobante_acopio.jrxml. " +
-                        "Asegúrese de que esté en la carpeta 'src/main/resources/reports'");
-            }
-
-            // Compilar el reporte
-            JasperReport jasperReport = JasperCompileManager.compileReport(reportStream);
 
             // Preparar parámetros
             Map<String, Object> parameters = new HashMap<>();
@@ -169,8 +157,8 @@ public class AcopioService {
             List<AcopioDetalle> detalles = acopioDetalleRepository.findByAcopioOrderByNumeroItemAsc(acopio);
             JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(detalles);
 
-            // Generar el reporte
-            JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, dataSource);
+            // Generar el reporte usando el servicio centralizado
+            JasperPrint jasperPrint = jasperReportService.fillReport("comprobante_acopio", parameters, dataSource);
 
             logger.info("Voucher generado exitosamente para acopio: {}", acopio.getNumeroAcopio());
 
@@ -178,8 +166,7 @@ public class AcopioService {
             historialService.logAccion(
                     acopio.getUsuario(), "IMPRESION_VOUCHER",
                     "Voucher generado para acopio " + acopio.getNumeroAcopio(),
-                    "ACOPIO"
-            );
+                    "ACOPIO");
 
             return jasperPrint;
 
@@ -195,7 +182,7 @@ public class AcopioService {
      * para pre-visualizar cálculos antes de guardar
      */
     public AcopioDetalle calcularDetalle(BigDecimal peso, BigDecimal ley, BigDecimal deduccion,
-                                         BigDecimal precioOnza, BigDecimal tipoCambio) {
+            BigDecimal precioOnza, BigDecimal tipoCambio) {
         AcopioDetalle detalle = new AcopioDetalle();
         detalle.setPeso(peso);
         detalle.setLey(ley);

@@ -3,10 +3,16 @@ package pe.com.acopio.util;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
+import javafx.stage.DirectoryChooser;
+import javafx.stage.FileChooser;
 import javafx.stage.Modality;
+import javafx.stage.Stage;
 import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.view.JasperViewer;
 
+import java.io.File;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 
 /**
@@ -27,6 +33,60 @@ public class ReportAlert {
         JasperViewer viewer = new JasperViewer(jasperPrint, false);
         viewer.setTitle(title);
         viewer.setVisible(true);
+    }
+
+    /**
+     * Muestra un diálogo para exportar el reporte a PDF
+     */
+    public static File showPDFSaveDialog(String defaultFileName) {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Guardar Reporte como PDF");
+
+        // Configurar filtro de extensión
+        FileChooser.ExtensionFilter extFilter = new FileChooser.ExtensionFilter("Archivos PDF (*.pdf)", "*.pdf");
+        fileChooser.getExtensionFilters().add(extFilter);
+
+        // Nombre de archivo por defecto con timestamp
+        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+        String fileName = defaultFileName + "_" + timestamp + ".pdf";
+        fileChooser.setInitialFileName(fileName);
+
+        // Directorio inicial (Documentos del usuario)
+        String userHome = System.getProperty("user.home");
+        File initialDirectory = new File(userHome + "/Documents");
+        if (initialDirectory.exists()) {
+            fileChooser.setInitialDirectory(initialDirectory);
+        }
+
+        // Mostrar diálogo
+        return fileChooser.showSaveDialog(new Stage());
+    }
+
+    /**
+     * Muestra un diálogo para exportar el reporte a Excel
+     */
+    public static File showExcelSaveDialog(String defaultFileName) {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Guardar Reporte como Excel");
+
+        // Configurar filtro de extensión
+        FileChooser.ExtensionFilter extFilter = new FileChooser.ExtensionFilter("Archivos Excel (*.xlsx)", "*.xlsx");
+        fileChooser.getExtensionFilters().add(extFilter);
+
+        // Nombre de archivo por defecto con timestamp
+        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+        String fileName = defaultFileName + "_" + timestamp + ".xlsx";
+        fileChooser.setInitialFileName(fileName);
+
+        // Directorio inicial (Documentos del usuario)
+        String userHome = System.getProperty("user.home");
+        File initialDirectory = new File(userHome + "/Documents");
+        if (initialDirectory.exists()) {
+            fileChooser.setInitialDirectory(initialDirectory);
+        }
+
+        // Mostrar diálogo
+        return fileChooser.showSaveDialog(new Stage());
     }
 
     /**
@@ -64,6 +124,7 @@ public class ReportAlert {
 
     /**
      * Muestra un diálogo de confirmación
+     * 
      * @return true si el usuario confirma, false en caso contrario
      */
     public static boolean showConfirmation(String title, String message) {

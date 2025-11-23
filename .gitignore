@@ -31,3 +31,10 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Database ###
+*.db
+
+### JasperReports Compiled ###
+*.jasper
+jasper/*.jasper

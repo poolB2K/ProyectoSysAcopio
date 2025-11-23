@@ -25,35 +25,59 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AcopioController {
 
-    @FXML private ComboBox<Proveedor> cmbProveedor;
-    @FXML private DatePicker dpFecha;
-    @FXML private ComboBox<Material> cmbMaterial;
-    @FXML private TextField txtPeso;
-    @FXML private TextField txtLey;
-    @FXML private TextField txtDeduccion;
-    @FXML private TextField txtPrecioOnza;
-    @FXML private TextField txtTipoCambio;
-    @FXML private TextField txtPrecioGramoDolares;
-    @FXML private TextField txtPrecioGramoSoles;
-    @FXML private TextField txtTotalItem;
-    @FXML private TextArea txtObservaciones;
-    @FXML private Label lblTotalGeneral;
+    @FXML
+    private ComboBox<Proveedor> cmbProveedor;
+    @FXML
+    private DatePicker dpFecha;
+    @FXML
+    private ComboBox<Material> cmbMaterial;
+    @FXML
+    private TextField txtPeso;
+    @FXML
+    private TextField txtLey;
+    @FXML
+    private TextField txtDeduccion;
+    @FXML
+    private TextField txtPrecioOnza;
+    @FXML
+    private TextField txtTipoCambio;
+    @FXML
+    private TextField txtPrecioGramoDolares;
+    @FXML
+    private TextField txtPrecioGramoSoles;
+    @FXML
+    private TextField txtTotalItem;
+    @FXML
+    private TextArea txtObservaciones;
+    @FXML
+    private Label lblTotalGeneral;
 
-    @FXML private TableView<AcopioDetalle> tblDetalles;
-    @FXML private TableColumn<AcopioDetalle, Integer> colItem;
-    @FXML private TableColumn<AcopioDetalle, String> colMaterial;
-    @FXML private TableColumn<AcopioDetalle, BigDecimal> colPeso;
-    @FXML private TableColumn<AcopioDetalle, BigDecimal> colLey;
-    @FXML private TableColumn<AcopioDetalle, BigDecimal> colDeduccion;
-    @FXML private TableColumn<AcopioDetalle, BigDecimal> colPrecioOnza;
-    @FXML private TableColumn<AcopioDetalle, BigDecimal> colTipoCambio;
-    @FXML private TableColumn<AcopioDetalle, BigDecimal> colPrecioGramo;
-    @FXML private TableColumn<AcopioDetalle, BigDecimal> colTotal;
+    @FXML
+    private TableView<AcopioDetalle> tblDetalles;
+    @FXML
+    private TableColumn<AcopioDetalle, Integer> colItem;
+    @FXML
+    private TableColumn<AcopioDetalle, String> colMaterial;
+    @FXML
+    private TableColumn<AcopioDetalle, BigDecimal> colPeso;
+    @FXML
+    private TableColumn<AcopioDetalle, BigDecimal> colLey;
+    @FXML
+    private TableColumn<AcopioDetalle, BigDecimal> colDeduccion;
+    @FXML
+    private TableColumn<AcopioDetalle, BigDecimal> colPrecioOnza;
+    @FXML
+    private TableColumn<AcopioDetalle, BigDecimal> colTipoCambio;
+    @FXML
+    private TableColumn<AcopioDetalle, BigDecimal> colPrecioGramo;
+    @FXML
+    private TableColumn<AcopioDetalle, BigDecimal> colTotal;
 
     private final ProveedorService proveedorService;
     private final AcopioService acopioService;
     private final MaterialRepository materialRepository;
     private final SessionManager sessionManager;
+    private final pe.com.acopio.service.JasperReportService jasperReportService;
 
     private ObservableList<AcopioDetalle> detallesObservable = FXCollections.observableArrayList();
 
@@ -80,9 +104,8 @@ public class AcopioController {
 
     private void configurarTabla() {
         colItem.setCellValueFactory(new PropertyValueFactory<>("numeroItem"));
-        colMaterial.setCellValueFactory(cellData ->
-                new javafx.beans.property.SimpleStringProperty(
-                        cellData.getValue().getMaterial().getNombre()));
+        colMaterial.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(
+                cellData.getValue().getMaterial().getNombre()));
         colPeso.setCellValueFactory(new PropertyValueFactory<>("peso"));
         colLey.setCellValueFactory(new PropertyValueFactory<>("ley"));
         colDeduccion.setCellValueFactory(new PropertyValueFactory<>("deduccion"));
@@ -104,6 +127,7 @@ public class AcopioController {
             public String toString(Proveedor p) {
                 return p != null ? p.getNombreCompleto() + " - " + p.getNumeroDocumento() : "";
             }
+
             @Override
             public Proveedor fromString(String string) {
                 return null;
@@ -120,6 +144,7 @@ public class AcopioController {
             public String toString(Material m) {
                 return m != null ? m.getNombre() : "";
             }
+
             @Override
             public Material fromString(String string) {
                 return null;
@@ -143,9 +168,12 @@ public class AcopioController {
             AcopioDetalle previewDetalle = acopioService.calcularDetalle(
                     peso, ley, deduccion, precioOnza, tipoCambio);
 
-            // Mostrar resultados - CORREGIDO: Usar RoundingMode en lugar de BigDecimal.ROUND_HALF_UP
-            txtPrecioGramoDolares.setText(previewDetalle.getPrecioGramoDolares().setScale(6, RoundingMode.HALF_UP).toString());
-            txtPrecioGramoSoles.setText(previewDetalle.getPrecioGramoSoles().setScale(6, RoundingMode.HALF_UP).toString());
+            // Mostrar resultados - CORREGIDO: Usar RoundingMode en lugar de
+            // BigDecimal.ROUND_HALF_UP
+            txtPrecioGramoDolares
+                    .setText(previewDetalle.getPrecioGramoDolares().setScale(6, RoundingMode.HALF_UP).toString());
+            txtPrecioGramoSoles
+                    .setText(previewDetalle.getPrecioGramoSoles().setScale(6, RoundingMode.HALF_UP).toString());
             txtTotalItem.setText(previewDetalle.getTotalAPagar().setScale(2, RoundingMode.HALF_UP).toString());
 
         } catch (NumberFormatException e) {
@@ -257,9 +285,75 @@ public class AcopioController {
     private void handleImprimirVoucher(Long acopioId) {
         try {
             JasperPrint jasperPrint = acopioService.generarVoucher(acopioId);
+
+            // Mostrar el reporte en el visor
             ReportAlert.showReport(jasperPrint, "Voucher de Acopio");
+
+            // Preguntar si desea exportar
+            if (ReportAlert.showConfirmation("Exportar",
+                    "¿Desea exportar el voucher a PDF o Excel?")) {
+                handleExportarVoucher(jasperPrint, acopioId);
+            }
+
         } catch (Exception e) {
             ReportAlert.showError("Error", "Error al generar voucher: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Maneja la exportación del voucher a diferentes formatos
+     */
+    private void handleExportarVoucher(JasperPrint jasperPrint, Long acopioId) {
+        // Crear diálogo de selección de formato
+        javafx.scene.control.ChoiceDialog<String> dialog = new javafx.scene.control.ChoiceDialog<>("PDF", "PDF",
+                "Excel");
+        dialog.setTitle("Exportar Voucher");
+        dialog.setHeaderText("Seleccione el formato de exportación");
+        dialog.setContentText("Formato:");
+
+        java.util.Optional<String> result = dialog.showAndWait();
+        result.ifPresent(formato -> {
+            try {
+                if ("PDF".equals(formato)) {
+                    exportarAPDF(jasperPrint, acopioId);
+                } else if ("Excel".equals(formato)) {
+                    exportarAExcel(jasperPrint, acopioId);
+                }
+            } catch (Exception e) {
+                ReportAlert.showError("Error", "Error al exportar: " + e.getMessage());
+            }
+        });
+    }
+
+    /**
+     * Exporta el voucher a PDF
+     */
+    private void exportarAPDF(JasperPrint jasperPrint, Long acopioId) {
+        try {
+            java.io.File file = ReportAlert.showPDFSaveDialog("Voucher_Acopio_" + acopioId);
+            if (file != null) {
+                jasperReportService.exportToPDF(jasperPrint, file.getAbsolutePath());
+                ReportAlert.showSuccess("Éxito",
+                        "Voucher exportado exitosamente a:\n" + file.getAbsolutePath());
+            }
+        } catch (Exception e) {
+            ReportAlert.showError("Error", "Error al exportar a PDF: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Exporta el voucher a Excel
+     */
+    private void exportarAExcel(JasperPrint jasperPrint, Long acopioId) {
+        try {
+            java.io.File file = ReportAlert.showExcelSaveDialog("Voucher_Acopio_" + acopioId);
+            if (file != null) {
+                jasperReportService.exportToExcel(jasperPrint, file.getAbsolutePath());
+                ReportAlert.showSuccess("Éxito",
+                        "Voucher exportado exitosamente a:\n" + file.getAbsolutePath());
+            }
+        } catch (Exception e) {
+            ReportAlert.showError("Error", "Error al exportar a Excel: " + e.getMessage());
         }
     }
 

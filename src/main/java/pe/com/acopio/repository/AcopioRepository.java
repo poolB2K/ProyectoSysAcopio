@@ -8,6 +8,7 @@ import pe.com.acopio.model.Proveedor;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface AcopioRepository extends JpaRepository<Acopio, Long> {
@@ -22,4 +23,15 @@ public interface AcopioRepository extends JpaRepository<Acopio, Long> {
 
     @Query("SELECT a FROM Acopio a ORDER BY a.fechaAcopio DESC")
     List<Acopio> findAllOrderByFechaDesc();
+
+    List<Acopio> findByActivoTrueOrderByFechaAcopioDesc();
+
+    Optional<Acopio> findTopByOrderByIdDesc();
+
+    long countByActivoTrue();
+
+    // Métodos para reportes
+    List<Acopio> findByFechaAcopioBetweenOrderByFechaAcopioDesc(LocalDate fechaInicio, LocalDate fechaFin);
+
+    List<Acopio> findByProveedorOrderByFechaAcopioDesc(Proveedor proveedor);
 }
